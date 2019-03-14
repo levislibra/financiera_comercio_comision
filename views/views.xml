@@ -1,0 +1,80 @@
+<openerp>
+  <data>
+
+    <!-- Comisiones Tree -->
+
+    <record model="ir.ui.view" id="financiera_comisiones_tree">
+      <field name="name">Comisiones Tree</field>
+      <field name="model">financiera.comercio.comision</field>
+      <field name="arch" type="xml">
+        <tree decoration-info="activo == True" decoration-muted="activo == False">
+          <field name="name"/>
+          <field name="comercio_id"/>
+          <field name="sobre"/>
+          <field name="comision_prestamo"/>
+          <field name="comision_cuota"/>
+          <field name="tasa" sum="Total"/>
+          <field name="monto" sum="Total"/>
+          <field name="activo"/>
+        </tree>
+      </field>
+    </record>
+
+
+    <!-- Comisiones Form -->
+
+    <record id="financiera_comisiones_form" model="ir.ui.view">
+        <field name="name">Comisiones Form</field>
+        <field name="model">financiera.comercio.comision</field>
+        <field name="arch" type="xml">
+            <form string="Comisiones">
+              <sheet>
+                <group>
+                  <group>
+                    <field name="name" required="1"/>
+                    <field name="comercio_id" required="1"/>
+                  </group>
+                  <group>
+                    <field name="activo"/>
+                  </group>
+                </group>
+                <group>
+                    <field name="sobre" required="1"/>
+                    <field name="comision_prestamo" attrs="{'invisible': [('sobre', '!=', 'prestamo')], 'required': [('sobre', '=', 'prestamo')]}"/>
+                    <field name="comision_cuota" attrs="{'invisible': [('sobre', '!=', 'cuota')], 'required': [('sobre', '=', 'cuota')]}"/>
+                    <field name="tasa" attrs="{'required': ['|', ('comision_prestamo', '=', 'monto_solicitado'), ('comision_cuota', '=', 'monto_cuota')], 'invisible': [('comision_prestamo', '!=', 'monto_solicitado'), ('comision_cuota', '!=', 'monto_cuota')]}"/>
+                    <field name="monto" attrs="{'required': ['|', ('comision_prestamo', '=', 'monto_fijo'), ('comision_cuota', '=', 'monto_fijo')], 'invisible': [('comision_prestamo', '!=', 'monto_fijo'), ('comision_cuota', '!=', 'monto_fijo')]}"/>
+                </group>
+              </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="financiera_comision_action">
+      <field name="name">Comisiones</field>
+      <field name="res_model">financiera.comercio.comision</field>
+      <field name="view_mode">tree,form</field>
+      <!-- <field name="context">{'search_default_pendientes':0}</field> -->
+      <field name="view_ids" eval="[(5, 0, 0), 
+        (0, 0, {'view_mode': 'tree', 'view_id': ref('financiera_comisiones_tree')}), 
+        (0, 0, {'view_mode': 'form', 'view_id': ref('financiera_comisiones_form')})]"/>
+    </record>
+
+
+    <menuitem name="Comisiones" id="menu_comisiones" web_icon="financiera_comercio_comision,static/description/icon.png" action="financiera_comision_action"/>
+    <!-- Comercio -->
+
+    <record id="entidad_comision_form_inherited"  model="ir.ui.view">
+      <field name="name">Extension Entidad Comision Form</field>
+      <field name="model">financiera.entidad</field>
+      <field name="inherit_id" ref="financiera_base.financiera_entidad_form"/>
+      <field name="arch" type="xml">        
+        <xpath expr="//field[@name='email']" position="after">
+          <field name="partner_id" attrs="{'invisible': [('type', '!=', 'comercio')]}"/>
+        </xpath>
+      </field>
+    </record>
+
+
+  </data>
+</openerp>
