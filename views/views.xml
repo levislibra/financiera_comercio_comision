@@ -111,10 +111,12 @@
       <field name="arch" type="xml">        
         <xpath expr="//page[3]" position='after'>
           <page string="Comisiones">
-            <group><label string="Comisiones"></group>
-            <field name="comisiones_ids"/>
-            <group><label string="Facturas de Comisiones"></group>
-            <field name="invoice_comisiones_ids"/>
+            <group>
+              <!-- <h2><label string="Comisiones"/></h2> -->
+              <field name="comisiones_ids"/>
+              <!-- <h2><label string="Facturas de Comisiones"/></h2> -->
+              <field name="invoice_comisiones_ids"/>
+            </group>
           </page>
         </xpath>
       </field>

@@ -111,8 +111,8 @@ class ExtendsFinancieraPrestamo(models.Model):
 	_inherit = 'financiera.prestamo' 
 	_name = 'financiera.prestamo'
 
-	invoice_comisiones_ids = fields.One2many('account.invoice', 'comision_prestamo_id', 'Comisiones')
-	comisiones_ids = fields.Many2many('financiera.comision', 'financiera_prestamo_comision_rel', 'prestamo_id', 'comision_id', string='Comisiones')
+	invoice_comisiones_ids = fields.One2many('account.invoice', 'comision_prestamo_id', 'Facturas de Comisiones')
+	comisiones_ids = fields.Many2many('financiera.comision', 'financiera_prestamo_comision_rel', 'prestamo_id', 'comision_id', string='Comisiones que Aplican')
 
 	def comisiones_prestamo(self):
 		cr = self.env.cr
@@ -135,7 +135,8 @@ class ExtendsFinancieraPrestamo(models.Model):
 			('start_date', '<=', self.fecha),
 			'|', ('end_date', '=', False), ('end_date', '>=', self.fecha)]
 		comisiones_ids = comisiones_obj.search(cr, uid, domain)
-		self.comisiones_ids = [(6, 0, comisiones_ids)]
+		for _id in comisiones_ids:
+			self.comisiones_ids = [(4, _id)]
 		return comisiones_ids
 
 
@@ -160,12 +161,13 @@ class ExtendsFinancieraPrestamo(models.Model):
 				monto = self.payment_ids[indice_ultimo_pago].amount
 			price_unit = monto * comision_tasa
 		elif comision_id.comision_prestamo == 'monto_fijo':
+			price_unit = comision_id.monto
 			if len(self.payment_ids) > 0:
-				# Si Tenia otros pagos ya se deberia haber
-				# generado las comisiones correspondientes
-				flag_facturar = False
-			else:
-				price_unit = comision_id.monto
+				# Si Tenia otros pagos y existe una factura de comision
+				# por el mismo monto a generar no sera considerada.
+				for invoice_id in self.invoice_comisiones_ids:
+					if invoice_id.state != 'cancel' and invoice_id.amount_total == price_unit:
+						flag_facturar = False
 
 		if flag_facturar:
 			# Create invoice line
@@ -196,9 +198,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 	@api.one
 	def confirmar_pagar_prestamo(self, payment_date, payment_amount, payment_journal_id, payment_communication):
 		rec = super(ExtendsFinancieraPrestamo, self).confirmar_pagar_prestamo(payment_date, payment_amount, payment_journal_id, payment_communication)
-		print("Pagamos xxxxxxxxxx")
 		comisiones_ids = self.comisiones_prestamo()
-		print(comisiones_ids)
 		for _id in comisiones_ids:
 			comision_id = self.env['financiera.comision'].browse(_id)
 			self.generar_comision(comision_id)
