@@ -1,29 +1,216 @@
 # -*- coding: utf-8 -*-
 
 from openerp import models, fields, api
+from datetime import datetime, timedelta
 
-class financiera_comercio_comision(models.Model):
-	_name = 'financiera.comercio.comision'
+class FinancieraComision(models.Model):
+	_name = 'financiera.comision'
 
 	name = fields.Char('Nombre')
-	comercio_id = fields.Many2one('financiera.entidad', 'Comercio', domain="[('type', '=', 'comercio')]")
+	# active = fields.Boolean("Activa", default=True)
+	state = fields.Selection([('borrador', 'Borrador'), ('confirmada', 'Confirmada'), ('obsoleta', 'Obsoleta')], string='Estado', readonly=True, default='borrador')
+	comision_global = fields.Boolean('Comision global', default=True)
+	entidad_id = fields.Many2one('financiera.entidad', 'Entidad')
+	start_date = fields.Date('Fecha desde')
+	end_date = fields.Date('Fecha hasta')
 	sobre = fields.Selection([('prestamo', 'Prestamo'), ('cuota', 'Cuota')], string='Aplica sobre', default='prestamo')
-	comision_prestamo = fields.Selection([('monto_solicitado', 'Monto Solicitado'), ('monto_fijo', 'Monto Fijo')], string='Opciones')
-	comision_cuota = fields.Selection([('monto_cuota', 'Monto Cuota'), ('monto_fijo', 'Monto Fijo')], string='Opciones')
+	comision_prestamo = fields.Selection([('monto_solicitado', 'Tasa sobre Monto Solicitado'), ('monto_fijo', 'Monto Fijo')], string='Opciones sobre Prestamo')
+	comision_cuota = fields.Selection([('monto_cuota', 'Tasa sobre Monto de la Cuota'), ('monto_fijo', 'Monto Fijo')], string='Opciones sobre Cuota')
 	tasa = fields.Float('Tasa a aplicar', digits=(16,4))
 	monto = fields.Float('Monto a aplicar', digits=(16,2))
-	activo = fields.Boolean("Estado", default=False)
+	journal_ids = fields.Many2many('account.journal', 'financiera_comision_journal_rel', 'comision_id', 'journal_id', string='Metodo de Pago/Cobro', domain="[('type', 'in', ('cash', 'bank'))]")
+	partner_id = fields.Many2one('res.partner', 'Facturara', domain="[('supplier', '=', True)]")
+	account_payment_term_id = fields.Many2one('account.payment.term', 'Plazo de pago')
+	iva = fields.Boolean('Calcular IVA')
+	iva_incuido = fields.Boolean('IVA incuido')
+	vat_tax_id = fields.Many2one('account.tax', 'Tasa de IVA', domain="[('type_tax_use', '=', 'sale')]")
+	journal_id = fields.Many2one('account.journal', 'Diario', domain="[('type', '=', 'purchase')]")
+	detalle_factura = fields.Char('Detalle en linea de factura')
 
 	@api.one
 	@api.onchange('sobre')
-	def onchange_sobre(self):
+	def _onchange_sobre(self):
 		self.comision_prestamo = None
 		self.comision_cuota = None
 		self.tasa = 0
 		self.monto = 0
 
+	@api.one
+	@api.onchange('entidad_id')
+	def _onchange_entidad_id(self):
+		if len(self.entidad_id) > 0 and len(self.entidad_id.partner_id) > 0:
+			self.partner_id = self.entidad_id.partner_id.id
+
+	@api.one
+	@api.onchange('comision_global')
+ 	def _onchange_comision_global(self):
+ 		self.entidad_id = None
+
+ 	@api.one
+ 	@api.onchange('name')
+ 	def _onchange_name(self):
+ 		self.detalle_factura = self.name
+
+	@api.one
+	def confirmar_comision(self):
+		self.state = 'confirmada'
+
+	@api.one
+	def depreciar_comision(self):
+		self.state = 'obsoleta'
+
+	@api.one
+	def editar_comision(self):
+		self.state = 'borrador'
+
+
 class ExtendsFinancieraSucursal(models.Model):
 	_inherit = 'financiera.entidad' 
 	_name = 'financiera.entidad'
 
-	partner_id = fields.Many2one('res.partner', 'Proveedor')
+	partner_id = fields.Many2one('res.partner', 'Proveedor', domain="[('supplier', '=', True)]")
+
+class ExtendsResPartner(models.Model):
+	_inherit = 'res.partner' 
+	_name = 'res.partner'
+
+	@api.model
+	def default_get(self, values):
+		rec = super(ExtendsResPartner, self).default_get(values)
+		context = dict(self._context or {})
+		active_model = context.get('active_model')
+		if active_model in ['financiera.grupo.comision', 'financiera.entidad']:
+			rec.update({
+				'supplier': True,
+				'customer': False,
+			})
+		return rec
+
+
+	@api.model
+	def create(self, values):
+		rec = super(ExtendsResPartner, self).create(values)
+		context = dict(self._context or {})
+		active_model = context.get('active_model')
+		current_uid = context.get('uid')
+		if active_model in ['financiera.grupo.comision', 'financiera.entidad']:
+			rec.update({
+				'supplier': True,
+				'customer': False,
+			})
+		return rec
+
+class ExtendsAccountInvoice(models.Model):
+	_inherit = 'account.invoice' 
+	_name = 'account.invoice'
+
+	comision_prestamo_id = fields.Many2one('financiera.prestamo', 'Comision Prestamo')
+	comision_cuota_id = fields.Many2one('financiera.prestamo.cuota', 'Comision Cuota')
+
+class ExtendsFinancieraPrestamo(models.Model):
+	_inherit = 'financiera.prestamo' 
+	_name = 'financiera.prestamo'
+
+	invoice_comisiones_ids = fields.One2many('account.invoice', 'comision_prestamo_id', 'Comisiones')
+	comisiones_ids = fields.Many2many('financiera.comision', 'financiera_prestamo_comision_rel', 'prestamo_id', 'comision_id', string='Comisiones')
+
+	def comisiones_prestamo(self):
+		cr = self.env.cr
+		uid = self.env.uid
+		entidad_id = None
+		if len(self.comercio_id) > 0:
+			entidad_id = self.comercio_id.id
+		else:
+			entidad_id = self.sucursal_id.id
+		journal_id = -1
+		if len(self.payment_ids) > 0:
+			indice_ultimo_pago = len(self.payment_ids)-1
+			journal_id = self.payment_ids[indice_ultimo_pago].journal_id.id
+		comisiones_obj = self.pool.get('financiera.comision')
+		domain = [
+			('sobre', '=', 'prestamo'),
+			('state', '=', 'confirmada'),
+			'|', ('comision_global', '=', True),('entidad_id', '=', entidad_id),
+			'|', ('journal_ids', '=', False), ('journal_ids', 'in', [journal_id]),
+			('start_date', '<=', self.fecha),
+			'|', ('end_date', '=', False), ('end_date', '>=', self.fecha)]
+		comisiones_ids = comisiones_obj.search(cr, uid, domain)
+		self.comisiones_ids = [(6, 0, comisiones_ids)]
+		return comisiones_ids
+
+
+	@api.one
+	def generar_comision(self, comision_id):
+		vat_tax_id = None
+		invoice_line_tax_ids = None
+		price_unit = 0
+		flag_facturar = True
+
+		if comision_id.iva and len(comision_id.vat_tax_id) > 0:
+			vat_tax_id = comision_id.vat_tax_id.id
+			invoice_line_tax_ids = [(6, 0, [vat_tax_id])]
+		else:
+			vat_tax_id = None
+			invoice_line_tax_ids = None
+		journal_id = comision_id.journal_id
+		if comision_id.comision_prestamo == 'monto_solicitado':
+			comision_tasa = comision_id.tasa / 100
+			if len(self.payment_ids) > 0:
+				indice_ultimo_pago = len(self.payment_ids)-1
+				monto = self.payment_ids[indice_ultimo_pago].amount
+			price_unit = monto * comision_tasa
+		elif comision_id.comision_prestamo == 'monto_fijo':
+			if len(self.payment_ids) > 0:
+				# Si Tenia otros pagos ya se deberia haber
+				# generado las comisiones correspondientes
+				flag_facturar = False
+			else:
+				price_unit = comision_id.monto
+
+		if flag_facturar:
+			# Create invoice line
+			ail = {
+				'name': comision_id.detalle_factura,
+				'quantity':1,
+				'price_unit': price_unit,
+				'vat_tax_id': vat_tax_id,
+				'invoice_line_tax_ids': invoice_line_tax_ids,
+				'account_id': journal_id.default_debit_account_id.id,
+			}
+
+			account_invoice_supplier = {
+				'description_financiera': comision_id.detalle_factura,
+				'account_id': comision_id.partner_id.property_account_payable_id.id,
+				'partner_id': comision_id.partner_id.id,
+				'journal_id': journal_id.id,
+				'currency_id': self.currency_id.id,
+				'company_id': self.company_id.id,
+				'date': datetime.now(),
+				'invoice_line_ids': [(0, 0, ail)],
+				'type': 'in_invoice',
+				'payment_term_id': comision_id.account_payment_term_id.id,
+			}
+			new_invoice_id = self.env['account.invoice'].create(account_invoice_supplier)
+			self.invoice_comisiones_ids = [new_invoice_id.id]
+
+	@api.one
+	def confirmar_pagar_prestamo(self, payment_date, payment_amount, payment_journal_id, payment_communication):
+		rec = super(ExtendsFinancieraPrestamo, self).confirmar_pagar_prestamo(payment_date, payment_amount, payment_journal_id, payment_communication)
+		print("Pagamos xxxxxxxxxx")
+		comisiones_ids = self.comisiones_prestamo()
+		print(comisiones_ids)
+		for _id in comisiones_ids:
+			comision_id = self.env['financiera.comision'].browse(_id)
+			self.generar_comision(comision_id)
+
+class ExtendsFinancieraPrestamoCuota(models.Model):
+	_inherit = 'financiera.prestamo.cuota' 
+	_name = 'financiera.prestamo.cuota'
+
+	invoice_comisiones_ids = fields.One2many('account.invoice', 'comision_cuota_id', 'Comisiones')
+
+	# @api.model
+	# def enviar_a_revision(self):
+	# 	print("ENVIAR A REVISION 1")
+	# 	rec = super(ExtendsFinancieraPrestamoCuota, self).enviar_a_revision()
+	# 	print("2")

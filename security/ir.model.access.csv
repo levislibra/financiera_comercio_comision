@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_financiera_comercio_comision_financiera_comercio_comision,financiera_comercio_comision.financiera_comercio_comision,model_financiera_comercio_comision_financiera_comercio_comision,,1,0,0,0
+
+user_financiera_comision,financiera.comision,model_financiera_comision,financiera_comision.user,1,0,0,0
+manager_financiera_comision,financiera.comision,model_financiera_comision,financiera_comision.manager,1,1,1,1
