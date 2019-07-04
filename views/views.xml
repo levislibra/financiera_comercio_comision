@@ -1,9 +1,9 @@
 <openerp>
   <data>
 
-    <menuitem name="Comisiones" id="menu_comisiones_icon" web_icon="financiera_comision,static/description/icon.png" groups="financiera_comision.manager"/>
+    <menuitem name="Comisiones" id="menu_comisiones_icon" web_icon="financiera_comision,static/description/icon.png" groups="financiera_comision.user"/>
 
-    <menuitem name="Comisiones" id="menu_comisiones" parent="menu_comisiones_icon" groups="financiera_comision.manager"/>
+    <menuitem name="Comisiones" id="menu_comisiones" parent="menu_comisiones_icon" groups="financiera_comision.user"/>
 
     <!-- financiera.comision Tree -->
 
@@ -23,6 +23,7 @@
           <field name="tasa"/>
           <field name="monto"/>
           <field name="state"/>
+          <field name="company_id" groups="base.group_erp_manager"/>
         </tree>
       </field>
     </record>
@@ -38,6 +39,7 @@
           <filter string="Inactivas" name="inactivas" domain="[('state', 'in', ['borrador', 'obsoleta'])]"/>
           <separate/>
           <filter string="Globales" name="comision_global" domain="[ ('comision_global', '=', True)]"/>
+          <field name="entidad_id"/>
           <field name="sobre"/>
           <field name="name"/>
           <field name="start_date"/>
@@ -55,14 +57,15 @@
         <field name="arch" type="xml">
             <form string="Comision">
               <header>
-                <button name="confirmar_comision" class="oe_highlight" states="borrador" string="Confirmar Comision" type="object" />
+                <button name="confirmar_comision" class="oe_highlight" states="borrador" string="Confirmar Comision" type="object" groups="financiera_comision.manager"/>
                 <button name="editar_comision" class="oe_highlight" states="confirmada,obsoleta" string="Editar Comision" groups="base.group_erp_manager" type="object" />
-                <button name="depreciar_comision" states="confirmada" string="Depreciar Comision" type="object" />
+                <button name="depreciar_comision" states="confirmada" string="Depreciar Comision" type="object" groups="financiera_comision.manager"/>
                 <field name="state" widget="statusbar"/>
               </header>
               <sheet>
                 <group>
                   <group>
+                    <field name="company_id" groups="base.group_erp_manager"/>
                     <field name="name"/>
                     <field name="comision_global" attrs="{'readonly': [('state', '!=', 'borrador')]}"/>
                     <field name="entidad_id" attrs="{'invisible': [('comision_global', '=', True)], 'required': [('comision_global', '=', False)], 'readonly': [('state', '!=', 'borrador')]}"/>
@@ -76,8 +79,8 @@
                     <field name="comision_cuota" attrs="{'invisible': [('sobre', '!=', 'cuota')], 'required': [('sobre', '=', 'cuota')], 'readonly': [('state', '!=', 'borrador')]}"/>
                     <field name="tasa" attrs="{'required': ['|', ('comision_prestamo', '=', 'monto_solicitado'), ('comision_cuota', '=', 'monto_cuota')], 'invisible': [('comision_prestamo', '!=', 'monto_solicitado'), ('comision_cuota', '!=', 'monto_cuota')], 'readonly': [('state', '!=', 'borrador')]}"/>
                     <field name="monto" attrs="{'required': ['|', ('comision_prestamo', '=', 'monto_fijo'), ('comision_cuota', '=', 'monto_fijo')], 'invisible': [('comision_prestamo', '!=', 'monto_fijo'), ('comision_cuota', '!=', 'monto_fijo')], 'readonly': [('state', '!=', 'borrador')]}"/>
-                    <field name="iva" readonly="1"/>
-                    <field name="iva_incuido" attrs="{'invisible': [('iva', '=', False)], 'readonly': [('state', '!=', 'borrador')]}"/>
+                    <field name="iva" readonly="0"/>
+                    <field name="iva_incluido" attrs="{'invisible': [('iva', '=', False)], 'readonly': [('state', '!=', 'borrador')]}"/>
                     <field name="vat_tax_id" attrs="{'invisible': [('iva', '=', False)], 'required': [('iva', '=', True)], 'readonly': [('state', '!=', 'borrador')]}"/>
                     <field name="journal_id" required="1"/>
                     <field name="detalle_factura" required="1"/>
@@ -100,7 +103,7 @@
         (0, 0, {'view_mode': 'form', 'view_id': ref('comisiones_form')})]"/>
     </record>
 
-    <menuitem name="Todas las comisiones" id="menu_financiera_comisiones" parent="menu_comisiones" action="financiera_comision_action" sequence="0" groups="financiera_comision.manager"/>
+    <menuitem name="Todas las comisiones" id="menu_financiera_comisiones" parent="menu_comisiones" action="financiera_comision_action" sequence="0" groups="financiera_comision.user"/>
 
     <!-- Prestamo inherit -->
 
@@ -110,11 +113,28 @@
       <field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_form"/>
       <field name="arch" type="xml">        
         <xpath expr="//page[3]" position='after'>
-          <page string="Comisiones">
+          <page string="Comisiones" groups="financiera_comision.user">
             <group>
-              <!-- <h2><label string="Comisiones"/></h2> -->
               <field name="comisiones_ids"/>
-              <!-- <h2><label string="Facturas de Comisiones"/></h2> -->
+              <field name="invoice_comisiones_ids"/>
+            </group>
+          </page>
+        </xpath>
+      </field>
+    </record>
+
+
+    <!-- Cuota inherit -->
+
+    <record id="comision_prestamo_cuota_form_inherited"  model="ir.ui.view">
+      <field name="name">Extension Cuota Form</field>
+      <field name="model">financiera.prestamo.cuota</field>
+      <field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_cuota_form"/>
+      <field name="arch" type="xml">        
+        <xpath expr="//page[3]" position='after'>
+          <page string="Comisiones" groups="financiera_comision.user">
+            <group>
+              <field name="comisiones_ids"/>
               <field name="invoice_comisiones_ids"/>
             </group>
           </page>
