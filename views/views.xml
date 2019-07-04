@@ -79,7 +79,7 @@
                     <field name="comision_cuota" attrs="{'invisible': [('sobre', '!=', 'cuota')], 'required': [('sobre', '=', 'cuota')], 'readonly': [('state', '!=', 'borrador')]}"/>
                     <field name="tasa" attrs="{'required': ['|', ('comision_prestamo', '=', 'monto_solicitado'), ('comision_cuota', '=', 'monto_cuota')], 'invisible': [('comision_prestamo', '!=', 'monto_solicitado'), ('comision_cuota', '!=', 'monto_cuota')], 'readonly': [('state', '!=', 'borrador')]}"/>
                     <field name="monto" attrs="{'required': ['|', ('comision_prestamo', '=', 'monto_fijo'), ('comision_cuota', '=', 'monto_fijo')], 'invisible': [('comision_prestamo', '!=', 'monto_fijo'), ('comision_cuota', '!=', 'monto_fijo')], 'readonly': [('state', '!=', 'borrador')]}"/>
-                    <field name="iva" readonly="0"/>
+                    <field name="iva" readonly="1"/>
                     <field name="iva_incluido" attrs="{'invisible': [('iva', '=', False)], 'readonly': [('state', '!=', 'borrador')]}"/>
                     <field name="vat_tax_id" attrs="{'invisible': [('iva', '=', False)], 'required': [('iva', '=', True)], 'readonly': [('state', '!=', 'borrador')]}"/>
                     <field name="journal_id" required="1"/>
