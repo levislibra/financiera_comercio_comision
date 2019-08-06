@@ -134,7 +134,8 @@ class ExtendsFinancieraPrestamo(models.Model):
 			'|', ('comision_global', '=', True),('entidad_id', '=', entidad_id),
 			'|', ('journal_ids', '=', False), ('journal_ids', 'in', [journal_id]),
 			('start_date', '<=', self.fecha),
-			'|', ('end_date', '=', False), ('end_date', '>=', self.fecha)]
+			'|', ('end_date', '=', False), ('end_date', '>=', self.fecha),
+			('company_id', '=', self.company_id.id)]
 		comisiones_ids = comisiones_obj.search(cr, uid, domain)
 		for _id in comisiones_ids:
 			self.comisiones_ids = [(4, _id)]
@@ -238,7 +239,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			'|', ('comision_global', '=', True),('entidad_id', '=', entidad_id),
 			'|', ('journal_ids', '=', False), ('journal_ids', 'in', [journal_id]),
 			('start_date', '<=', payment_date),
-			'|', ('end_date', '=', False), ('end_date', '>=', payment_date)]
+			'|', ('end_date', '=', False), ('end_date', '>=', payment_date),
+			('company_id', '=', self.company_id.id)]
 		comisiones_ids = comisiones_obj.search(cr, uid, domain)
 		for _id in comisiones_ids:
 			self.comisiones_ids = [(4, _id)]
