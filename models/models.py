@@ -107,6 +107,19 @@ class ExtendsAccountInvoice(models.Model):
 
 	comision_prestamo_id = fields.Many2one('financiera.prestamo', 'Comision Prestamo')
 	comision_cuota_id = fields.Many2one('financiera.prestamo.cuota', 'Comision Cuota')
+	payment_comision_id = fields.Many2one('account.payment', 'Pago generador comision')
+
+class ExtendsAccountPayment(models.Model):
+	_inherit = 'account.payment'
+	_name = 'account.payment'
+
+	invoice_comisiones_ids = fields.One2many('account.invoice', 'payment_comision_id', 'Facturas de Comisiones')
+
+	@api.multi
+	def cancel(self):
+		res = super(ExtendsAccountPayment, self).cancel()
+		for invoice_id in self.invoice_comisiones_ids:
+			invoice_id.signal_workflow('invoice_cancel')
 
 class ExtendsFinancieraPrestamo(models.Model):
 	_inherit = 'financiera.prestamo' 
@@ -307,6 +320,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			}
 			new_invoice_id = self.env['account.invoice'].create(account_invoice_supplier)
 			self.invoice_comisiones_ids = [new_invoice_id.id]
+		return new_invoice_id
 
 	@api.one
 	def confirmar_cobrar_cuota(self, payment_date, journal_id, payment_amount, multi_cobro_id):
@@ -314,4 +328,6 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		comisiones_ids = self.comisiones_cuota()
 		for _id in comisiones_ids:
 			comision_id = self.env['financiera.comision'].browse(_id)
-			self.generar_comision(comision_id)
+			invoice_id = self.generar_comision(comision_id)
+			self.payment_last_id.invoice_comisiones_ids = [invoice_id[0].id]
+
