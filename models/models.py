@@ -215,6 +215,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 			}
 			new_invoice_id = self.env['account.invoice'].create(account_invoice_supplier)
 			self.invoice_comisiones_ids = [new_invoice_id.id]
+		return new_invoice_id
 
 	@api.one
 	def confirmar_pagar_prestamo(self, payment_date, payment_amount, payment_journal_id, payment_communication):
@@ -222,7 +223,9 @@ class ExtendsFinancieraPrestamo(models.Model):
 		comisiones_ids = self.comisiones_prestamo()
 		for _id in comisiones_ids:
 			comision_id = self.env['financiera.comision'].browse(_id)
-			self.generar_comision(comision_id)
+			invoice_id = self.generar_comision(comision_id)
+			self.payment_last_id.invoice_comisiones_ids = [invoice_id[0].id]
+
 
 class ExtendsFinancieraPrestamoCuota(models.Model):
 	_inherit = 'financiera.prestamo.cuota' 
