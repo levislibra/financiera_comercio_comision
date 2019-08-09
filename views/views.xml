@@ -1,9 +1,9 @@
 <openerp>
   <data>
 
-    <menuitem name="Comisiones" id="menu_comisiones_icon" web_icon="financiera_comision,static/description/icon.png" groups="financiera_comision.user"/>
+    <menuitem name="Comisiones" id="menu_comisiones_icon" web_icon="financiera_comision,static/description/icon.png" groups="financiera_comision.manager"/>
 
-    <menuitem name="Comisiones" id="menu_comisiones" parent="menu_comisiones_icon" groups="financiera_comision.user"/>
+    <menuitem name="Comisiones" id="menu_comisiones" parent="menu_comisiones_icon" groups="financiera_comision.manager"/>
 
     <!-- financiera.comision Tree -->
 
