@@ -333,4 +333,3 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			comision_id = self.env['financiera.comision'].browse(_id)
 			invoice_id = self.generar_comision(comision_id)
 			self.payment_last_id.invoice_comisiones_ids = [invoice_id[0].id]
-

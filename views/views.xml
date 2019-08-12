@@ -103,7 +103,7 @@
         (0, 0, {'view_mode': 'form', 'view_id': ref('comisiones_form')})]"/>
     </record>
 
-    <menuitem name="Todas las comisiones" id="menu_financiera_comisiones" parent="menu_comisiones" action="financiera_comision_action" sequence="0" groups="financiera_comision.user"/>
+    <menuitem name="Todas las comisiones" id="menu_financiera_comisiones" parent="menu_comisiones" action="financiera_comision_action" sequence="0" groups="financiera_comision.manager"/>
 
     <!-- Prestamo inherit -->
 
@@ -113,7 +113,7 @@
       <field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_form"/>
       <field name="arch" type="xml">        
         <xpath expr="//page[3]" position='after'>
-          <page string="Comisiones" groups="financiera_comision.user">
+          <page string="Comisiones" groups="financiera_comision.manager">
             <group>
               <field name="comisiones_ids"/>
               <field name="invoice_comisiones_ids"/>
@@ -132,7 +132,7 @@
       <field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_cuota_form"/>
       <field name="arch" type="xml">        
         <xpath expr="//page[3]" position='after'>
-          <page string="Comisiones" groups="financiera_comision.user">
+          <page string="Comisiones" groups="financiera_comision.manager">
             <group>
               <field name="comisiones_ids"/>
               <field name="invoice_comisiones_ids"/>
