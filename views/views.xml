@@ -1,9 +1,14 @@
 <openerp>
   <data>
 
+    <!-- Menu App principal -->
+
     <menuitem name="Comisiones" id="menu_comisiones_icon" web_icon="financiera_comision,static/description/icon.png" groups="financiera_comision.manager"/>
 
-    <menuitem name="Comisiones" id="menu_comisiones" parent="menu_comisiones_icon" groups="financiera_comision.manager"/>
+    <!-- Submenu -->
+    <menuitem name="Comisiones" id="menu_comisiones" parent="menu_comisiones_icon" sequence="0" groups="financiera_comision.manager"/>
+
+    <menuitem name="Configuracion" id="menu_configuracion" parent="menu_comisiones_icon" sequence="10" groups="financiera_comision.manager"/>
 
     <!-- financiera.comision Tree -->
 
@@ -103,7 +108,31 @@
         (0, 0, {'view_mode': 'form', 'view_id': ref('comisiones_form')})]"/>
     </record>
 
-    <menuitem name="Todas las comisiones" id="menu_financiera_comisiones" parent="menu_comisiones" action="financiera_comision_action" sequence="0" groups="financiera_comision.manager"/>
+    <record model="ir.actions.act_window" id="comision_prestmos_action">
+      <field name="name">Comisiones Sobre Prestamos</field>
+      <field name="res_model">account.invoice</field>
+      <field name="view_mode">tree</field>
+      <field name="domain">[('comision_prestamo_id', '!=', None)]</field>
+      <field name="view_ids" eval="[(5, 0, 0), 
+        (0, 0, {'view_mode': 'tree', 'view_id': ref('account.invoice_supplier_tree')})]"/>
+    </record>
+
+    <record model="ir.actions.act_window" id="comision_cuotas_action">
+      <field name="name">Comisiones Sobre Cuotas</field>
+      <field name="res_model">account.invoice</field>
+      <field name="view_mode">tree</field>
+      <field name="domain">[('comision_cuota_id', '!=', None)]</field>
+      <field name="view_ids" eval="[(5, 0, 0), 
+        (0, 0, {'view_mode': 'tree', 'view_id': ref('account.invoice_supplier_tree')})]"/>
+    </record>
+
+    <!-- Action menu -->
+    
+    <menuitem name="Sobre Prestamos" id="menu_comisiones_prestamos" parent="menu_comisiones" action="comision_prestmos_action" sequence="0" groups="financiera_comision.manager"/>
+
+    <menuitem name="Sobre Cuotas" id="menu_comisiones_cuotas" parent="menu_comisiones" action="comision_cuotas_action" sequence="10" groups="financiera_comision.manager"/>
+
+    <menuitem name="Todas las comisiones" id="menu_financiera_comisiones" parent="menu_configuracion" action="financiera_comision_action" sequence="0" groups="financiera_comision.manager"/>
 
     <!-- Prestamo inherit -->
 

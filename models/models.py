@@ -209,9 +209,12 @@ class ExtendsFinancieraPrestamo(models.Model):
 				'currency_id': self.currency_id.id,
 				'company_id': comision_id.company_id.id,
 				'date': datetime.now(),
+				'date_invoice': datetime.now(),
 				'invoice_line_ids': ail_ids,
 				'type': 'in_invoice',
 				'payment_term_id': comision_id.account_payment_term_id.id,
+				'sucursal_id': self.sucursal_id.id,
+				'comercio_id': self.comercio_id.id,
 			}
 			new_invoice_id = self.env['account.invoice'].create(account_invoice_supplier)
 			self.invoice_comisiones_ids = [new_invoice_id.id]
@@ -317,9 +320,12 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 				'currency_id': self.currency_id.id,
 				'company_id': comision_id.company_id.id,
 				'date': datetime.now(),
+				'date_invoice': datetime.now(),
 				'invoice_line_ids': ail_ids,
 				'type': 'in_invoice',
 				'payment_term_id': comision_id.account_payment_term_id.id,
+				'sucursal_id': self.sucursal_id.id,
+				'comercio_id': self.comercio_id.id,
 			}
 			new_invoice_id = self.env['account.invoice'].create(account_invoice_supplier)
 			self.invoice_comisiones_ids = [new_invoice_id.id]
