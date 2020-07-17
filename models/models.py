@@ -2,6 +2,7 @@
 
 from openerp import models, fields, api
 from datetime import datetime, timedelta
+from openerp.exceptions import UserError, ValidationError
 
 class FinancieraComision(models.Model):
 	_name = 'financiera.comision'
@@ -169,7 +170,11 @@ class ExtendsFinancieraPrestamo(models.Model):
 		else:
 			vat_tax_id = None
 			invoice_line_tax_ids = None
-		journal_id = comision_id.journal_id
+		journal_id = None
+		if len(comision_id.journal_id) > 0:
+			journal_id = comision_id.journal_id
+		else:
+			raise UserError("Debe definir el diario de Proveedor en Comisiones -> Configuracion.")
 		if comision_id.comision_prestamo == 'monto_solicitado':
 			comision_tasa = comision_id.tasa / 100
 			monto = 0
