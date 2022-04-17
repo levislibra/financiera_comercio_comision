@@ -45,13 +45,13 @@ class FinancieraComision(models.Model):
 
 	@api.one
 	@api.onchange('comision_global')
- 	def _onchange_comision_global(self):
- 		self.entidad_id = None
+	def _onchange_comision_global(self):
+		self.entidad_id = None
 
- 	@api.one
- 	@api.onchange('name')
- 	def _onchange_name(self):
- 		self.detalle_factura = self.name
+	@api.one
+	@api.onchange('name')
+	def _onchange_name(self):
+		self.detalle_factura = self.name
 
 	@api.one
 	def confirmar_comision(self):
@@ -133,10 +133,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 		cr = self.env.cr
 		uid = self.env.uid
 		entidad_id = None
-		if len(self.comercio_id) > 0:
-			entidad_id = self.comercio_id.id
-		else:
-			entidad_id = self.sucursal_id.id
+		entidad_id = self.sucursal_id.id
 		journal_id = -1
 		if len(self.payment_ids) > 0:
 			indice_ultimo_pago = len(self.payment_ids)-1
@@ -219,7 +216,6 @@ class ExtendsFinancieraPrestamo(models.Model):
 				'type': 'in_invoice',
 				'payment_term_id': comision_id.account_payment_term_id.id,
 				'sucursal_id': self.sucursal_id.id,
-				'comercio_id': self.comercio_id.id,
 			}
 			new_invoice_id = self.env['account.invoice'].create(account_invoice_supplier)
 			self.invoice_comisiones_ids = [new_invoice_id.id]
@@ -246,10 +242,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		cr = self.env.cr
 		uid = self.env.uid
 		entidad_id = None
-		if len(self.comercio_id) > 0:
-			entidad_id = self.comercio_id.id
-		else:
-			entidad_id = self.sucursal_id.id
+		entidad_id = self.sucursal_id.id
 		journal_id = -1
 		payment_date = None
 		if len(self.payment_ids) > 0:
@@ -330,7 +323,6 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 				'type': 'in_invoice',
 				'payment_term_id': comision_id.account_payment_term_id.id,
 				'sucursal_id': self.sucursal_id.id,
-				'comercio_id': self.comercio_id.id,
 			}
 			new_invoice_id = self.env['account.invoice'].create(account_invoice_supplier)
 			self.invoice_comisiones_ids = [new_invoice_id.id]
