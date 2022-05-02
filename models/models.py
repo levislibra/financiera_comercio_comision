@@ -329,8 +329,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		return new_invoice_id
 
 	@api.one
-	def confirmar_cobrar_cuota(self, payment_date, journal_id, payment_amount, multi_cobro_id):
-		rec = super(ExtendsFinancieraPrestamoCuota, self).confirmar_cobrar_cuota(payment_date, journal_id, payment_amount, multi_cobro_id)
+	def confirmar_cobrar_cuota(self, payment_date, journal_id, payment_amount, multi_cobro_id, payment_close=False):
+		super(ExtendsFinancieraPrestamoCuota, self).confirmar_cobrar_cuota(payment_date, journal_id, payment_amount, multi_cobro_id, payment_close)
 		comisiones_ids = self.comisiones_cuota()
 		for _id in comisiones_ids:
 			comision_id = self.env['financiera.comision'].browse(_id)
