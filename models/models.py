@@ -71,6 +71,10 @@ class ExtendsFinancieraSucursal(models.Model):
 	_name = 'financiera.entidad'
 
 	partner_id = fields.Many2one('res.partner', 'Proveedor', domain="[('supplier', '=', True)]")
+	cuit = fields.Char('CUIT')
+	cbu = fields.Char('CBU')
+	banco_id = fields.Many2one('res.bank', 'Banco')
+	nro_de_cuenta = fields.Char('Nro de cuenta')
 
 class ExtendsResPartner(models.Model):
 	_inherit = 'res.partner' 

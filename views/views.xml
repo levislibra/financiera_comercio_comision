@@ -181,6 +181,10 @@
       <field name="arch" type="xml">        
         <xpath expr="//field[@name='email']" position="after">
           <field name="partner_id" context="{'active_model': 'financiera.entidad'}"/>
+					<field name='cuit'/>
+					<field name='cbu'/>
+					<field name='banco_id'/>
+					<field name='nro_de_cuenta'/>
         </xpath>
       </field>
     </record>
